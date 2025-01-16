@@ -221,7 +221,7 @@ app.all('/', (_, res) => {
 	const id = process.env.SPACE_ID
 	res.json({
 		message: id
-			? `Go to https://hf.co/spaces/${id}/discussions for discuss`
+			? `Go to https://github.com/orgs/pvkimxk/discussions for discuss`
 			: 'Hello World!',
 		uptime: new Date(process.uptime() * 1000).toUTCString().split(' ')[4],
 		status
