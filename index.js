@@ -12,7 +12,7 @@ import sharp from 'sharp'
 import util from 'util'
 import yts from 'yt-search'
 
-const exec = util.promisify(cp.exec)
+
 
 const utils = {
 	getBrowser: (...opts) =>
@@ -245,7 +245,7 @@ app.all('/', async(_, res) => {
 		`${utils.formatSize(totalmem - freemem)} / ${utils.formatSize(totalmem)}`
 
 	const id = process.env.SPACE_ID
-	res.json((await exec("neofetch --stdout")).stdout)
+	res.json(cp.execSync("neofetch --stdout").toString())
 })
 
 app.all(/^\/(brat|carbon)/, async (req, res) => {
