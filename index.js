@@ -232,7 +232,7 @@ app.use((req, __, next) => {
 
 app.use('/file', express.static(tmpDir))
 
-app.all('/', (_, res) => {
+app.all('/', async(_, res) => {
 	const status = {}
 	status['diskUsage'] = cp.execSync('du -sh').toString().split('M')[0] + ' MB'
 
