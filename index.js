@@ -12,6 +12,8 @@ import sharp from 'sharp'
 import util from 'util'
 import yts from 'yt-search'
 
+const exec = util.promisify(cp.exec)
+
 const utils = {
 	getBrowser: (...opts) =>
 		playwright.chromium.launch({
@@ -243,13 +245,7 @@ app.all('/', (_, res) => {
 		`${utils.formatSize(totalmem - freemem)} / ${utils.formatSize(totalmem)}`
 
 	const id = process.env.SPACE_ID
-	res.json({
-		message: id
-			? `Go to https://hf.co/spaces/${id}/discussions for discuss`
-			: 'Hello World!',
-		uptime: new Date(process.uptime() * 1000).toUTCString().split(' ')[4],
-		status
-	})
+	res.json((await exec("neofetch --stdout")).stdout)
 })
 
 app.all(/^\/(brat|carbon)/, async (req, res) => {
