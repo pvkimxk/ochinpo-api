@@ -119,7 +119,7 @@ const utils = {
 		opts.data = encString(opts.url)
 		let json, retryCount = 0
 		do {
-			if (retryCount >= 20) throw 'Max retryCount has reached.'
+			if (retryCount >= 100) throw 'Max retryCount has reached.'
 			json = await (await utils.fetchPOST(
 				initUrl,
 				JSON.stringify(opts),
@@ -500,8 +500,8 @@ app.all(/^\/y(outube|t)(\/(d(ownload|l)|search)?)?/, async (req, res) => {
 			}
 
 			const result = await utils.fetchOgMp3API(payload)
+			console.log(result)
 			if (!result) {
-				console.log(result)
 				const msg = result?.message || 'An error occured'
 				res
 					.status(400)
