@@ -89,16 +89,11 @@ const utils = {
 			).json()
 
 		opts.data = encString(opts.url)
-		const initTask = await makeRequest(
-			`/init/${encString(opts.url, '1')}`, opts
-		)
-		console.log({ initTask })
-
 		let statusTask, retryCount = 0
 		do {
 			if (retryCount >= 100) throw 'Max retryCount has reached.'
 			statusTask = await makeRequest(
-				`/status/${encString(initTask.i)}`, initTask.i
+				`/init/${encString(opts.url, '1')}`, opts
 			)
 			console.log({ statusTask })
 			retryCount += 1
