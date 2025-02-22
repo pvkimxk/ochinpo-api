@@ -13,39 +13,6 @@ import util from 'util'
 import yts from 'yt-search'
 
 const utils = {
-	decryptSaveTube: async (data) => {
-		const key = 'C5D58EF67A7584E4A29F6C35BBC4EB12'
-		
-		const toByteArray = (str) => {
-			if (str === key) return new Uint8Array(
-				str
-					.match(/[\dA-F]{2}/gi)
-					.map(v => parseInt(v, 16))
-			)
-			let n = atob(str.replace(/\s/g, ''))
-			let a = new Uint8Array(n.length)
-			for (let e = 0; e < n.length; e++) a[e] = n.charCodeAt(e)
-			return a.buffer
-		}
-		
-		const importKey = () => crypto.subtle.importKey(
-			'raw',
-			toByteArray(key),
-			{ name: 'AES-CBC' },
-			false,
-			['decrypt']
-		)
-		
-		const t = toByteArray(data),
-			iv = t.slice(0, 16),
-			s = await crypto.subtle.decrypt(
-				{ name: 'AES-CBC', iv },
-				await importKey(),
-				t.slice(16)
-			),
-			l = new TextDecoder().decode(new Uint8Array(s))
-		return JSON.parse(l)
-	},
 	delay: (ms) => new Promise(res => setTimeout(res, ms)),
 	getBrowser: (...opts) =>
 		playwright.chromium.launch({
@@ -94,7 +61,7 @@ const utils = {
 	fetchPOST: (url, body, opts = {}) =>
 		fetch(url, { method: 'POST', body, ...opts }),
 	fetchOgMp3API: async (opts) => {
-		const encString = (str, type) => (
+		const encString = (str, type) =>
 			type === '1' ?
 			str.split('')
 				.reverse()
@@ -103,55 +70,44 @@ const utils = {
 			str.split('')
 				.map((_, i) => String.fromCharCode(str.charCodeAt(i) ^ 1))
 				.join('')
-		)
-		
-		const randHash = () => (
+
+		const randHash = () =>
 			[...crypto.getRandomValues(new Uint8Array(16))]
 				.map(byte => byte.toString(16).padStart(2, '0'))
 				.join('')
-		)
 		
 		const apiUrl = `https://api5.apiapi.lat/`
-		const initUrl = `${apiUrl + randHash()}/init` +
-			`/${encString(opts.url, '1')}/${randHash()}/`
 		const headers = { 'Content-Type': 'application/json' }
-		
-		opts.data = encString(opts.url)
-		let json, retryCount = 0
-		do {
-			if (retryCount >= 100) throw 'Max retryCount has reached.'
-			json = await (await utils.fetchPOST(
-				initUrl,
-				JSON.stringify(opts),
-				{ headers }
-			)).json()
-			retryCount += 1
-			if (json.t === null) return json.t
-			await utils.delay(3e3)
-		} while (json.s === 'P')
-		
-		return `${apiUrl + randHash()}/download` +
-			`/${encString(json.i)}/${randHash()}/`
-	},
-	fetchSaveTubeAPI: async (opts) => {
-		const headers = {
-			Authority: 'cdn59.savetube.su',
-			'Content-Type': 'application/json',
-		}
 
-		const makeRequest = async (endpoint) =>
+		const makeRequest = async (endpoint, body) =>
 			(
 				await utils.fetchPOST(
-					`https://${headers.Authority}${endpoint}`,
-					JSON.stringify(opts),
+					`${apiUrl + randHash()}/${endpoint}/${randHash()}/`,
+					JSON.stringify(body),
 					{ headers }
 				)
 			).json()
 
-		let info = await makeRequest('/v2/info')
-		info = await utils.decryptSaveTube(info.data)
-		opts.key = info.key
-		return makeRequest('/download')
+		opts.data = encString(opts.url)
+		const initTask = await makeRequest(
+			`/init/${encString(opts.url, '1')}`, opts
+		)
+		console.log({ initTask })
+
+		let statusTask, retryCount = 0
+		do {
+			if (retryCount >= 100) throw 'Max retryCount has reached.'
+			statusTask = await makeRequest(
+				`/status/${opts.data}`, initTask.i
+			)
+			console.log({ statusTask })
+			retryCount += 1
+			if (statusTask.t === null) return statusTask.t
+			await utils.delay(3e3)
+		} while (statusTask.s === 'P')
+		
+		return `${apiUrl + randHash()}/download` +
+			`/${encString(statusTask.i)}/${randHash()}/`
 	},
 	formatSize: (n) => bytes(+n, { unitSeparator: ' ' }),
 	generateBrat: async (text) => {
