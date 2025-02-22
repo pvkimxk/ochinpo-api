@@ -98,7 +98,7 @@ const utils = {
 		do {
 			if (retryCount >= 100) throw 'Max retryCount has reached.'
 			statusTask = await makeRequest(
-				`/status/${encString(initTask.i)}`, initTask.i
+				`/status/${encString(initTask.i)}`, { data: initTask.i }
 			)
 			console.log({ statusTask })
 			retryCount += 1
