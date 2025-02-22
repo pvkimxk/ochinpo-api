@@ -76,7 +76,7 @@ const utils = {
 				.map(byte => byte.toString(16).padStart(2, '0'))
 				.join('')
 		
-		const apiUrl = `https://api5.apiapi.lat/`
+		const apiUrl = `https://api${opts.format === '1' ? '5' : ''}.apiapi.lat/`
 		const headers = { 'Content-Type': 'application/json' }
 
 		const makeRequest = async (endpoint, body) =>
