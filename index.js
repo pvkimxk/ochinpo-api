@@ -305,6 +305,7 @@ app.all('/mediafire', async (req, res) => {
 			utils.fetchMediafireAPI(id),
 			utils.getMediafireDownloadLink(obj.url)
 		])
+		if (obj.debug) console.log({ data, result })
 		if (data.error)
 			return res.status(400).json({ success: false, message: data.message })
 
