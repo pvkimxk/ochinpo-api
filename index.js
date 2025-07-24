@@ -130,7 +130,7 @@ const utils = {
 		const decodeBase64 = (str) => decodeURIComponent(
 			atob(str)
 				.split('')
-				.map(c => '%' + c.charCodeAt(0).toString(16)))
+				.map(c => '%' + c.charCodeAt(0).toString(16))
 				.join('')
 		)
 
