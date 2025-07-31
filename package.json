@@ -7,6 +7,6 @@
     "playwright": "*",
     "serve-favicon": "*",
     "sharp": "*",
-    "yt-search": "*"
+    "yt-search": "github:rippanteq7/yt-search"
   }
 }
