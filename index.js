@@ -128,11 +128,12 @@ const utils = {
 	},
 	getMediafireDownloadLink: async (url) => {
 		let resp = await fetch(url)
+		let cookie = resp.headers.get('set-cookie')
 		let html = await resp.text()
 		let dl = html.match(/href="(.*?)".*id="downloadButton"/)?.[1]
 		return dl ? {
-			cookie: resp.headers.get('set-cookie'),
-			download: decodeBase64(dl)
+			cookie: `${cookie.match(/, (\w+)=/)[1]}=1`,
+			download: dl
 		} : null
 	},
 	getError: (e) =>
