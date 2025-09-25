@@ -127,20 +127,13 @@ const utils = {
 		}
 	},
 	getMediafireDownloadLink: async (url) => {
-		const decodeBase64 = (str) => decodeURIComponent(
-			atob(str)
-				.split('')
-				.map(c => '%' + c.charCodeAt(0).toString(16))
-				.join('')
-		)
-
 		let resp = await fetch(url)
 		let html = await resp.text()
-		let dl = html.match(/data-scrambled-url="(.*?)"/)?.[1]
+		let dl = html.match(/href="(.*?)".*id="downloadButton"/)?.[1]
 		return dl ? {
 			cookie: resp.headers.get('set-cookie'),
 			download: decodeBase64(dl)
-		} : false
+		} : null
 	},
 	getError: (e) =>
 		String(e).startsWith('[object ') ? 'Internal Server Error' : String(e),
