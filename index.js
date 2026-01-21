@@ -149,6 +149,10 @@ const utils = {
 	mediafireIdRegex: /https?:\/\/(www.)?mediafire.com\/(file|folder)\/(\w+)/,
 	randomIP: () =>
 		[...new Array(4)].map(() => ~~(Math.random() * 256)).join('.'),
+	returnYtDislike = id =>
+				fetch(`https://returnyoutubedislikeapi.com/votes?videoId=${id}`)
+				.then(r => r.json())
+				.then(d => d.dislikes),
 	randomName: (str = '') => Math.random().toString(36).slice(2) + str,
 	toPDF: (urls, opts = {}) =>
 		new Promise(async (resolve, reject) => {
@@ -417,27 +421,29 @@ app.all(/^\/webp2(gif|mp4|png)/, async (req, res) => {
 
 // /yt /yt/dl /yt/download /yt/search /youtube/dl /youtube/download /youtube/search
 app.all(/^\/y(outube|t)(\/(d(ownload|l)|search)?)?/, async (req, res) => {
-	if (!['GET', 'POST'].includes(req.method))
-		return res
-			.status(405)
-			.json({ success: false, message: 'Method Not Allowed' })
+	if (!['GET','POST'].includes(req.method))
+		return res.status(405).json({ success:false, message:'Method Not Allowed' });
 
 	try {
-		const type = req.params[2]
-		const obj = req.allParams
+		const type = req.params[2];
+		const obj	= req.allParams;
+
 		if (type === 'search') {
 			if (!obj.query)
-				return res
-					.status(400)
-					.json({ success: false, message: "Required parameter 'query'" })
+				return res.status(400).json({ success:false, message:"Required parameter 'query'" });
 
-			const result = await yts(obj)
-			if (!(result.all?.length || result?.url))
-				return res
-					.status(400)
-					.json({ success: false, message: 'Video unavailable' })
+			const result = await yts(obj);
+			if (!result.all?.length)
+				return res.status(400).json({ success:false, message:'Video unavailable' });
 
-			res.json({ success: true, result })
+			const withDislikes = await Promise.all(
+				result.all.slice(0,10).map(async v => ({
+					...v,
+					dislikes: await utils.returnYtDislike(v.videoId)
+				}))
+			);
+
+			res.json({ success:true, result:withDislikes });
 			return
 		} else if (['dl', 'download'].includes(type)) {
 			if (!obj.url)
@@ -494,12 +500,13 @@ app.all(/^\/y(outube|t)(\/(d(ownload|l)|search)?)?/, async (req, res) => {
 
 		const dlUrl = `https://${req.hostname}/yt/dl?url=${result.url}`
 		const download = {
-			audio: `${dlUrl}&type=audio`,
+			audio: `https://eolithic-daniele-nonchivalrously.ngrok-free.app/dl?url=${result.url}`,
 			video: `${dlUrl}&type=video`
 		}
+		const dislikes = await utils.returnYtDislike(result.videoId);
 		res.json({
 			success: true,
-			result: { ...result, download }
+			result: { ...result, dislikes, download }
 		})
 	} catch (e) {
 		console.log(e)
